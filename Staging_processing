@@ -29,9 +29,11 @@ for j = 1: length(AfterFilting_FolderList)
     iMVC_Data_eded = zeros(18000, length(Processing_FileList));
     %%
     for jj = 1:length(Processing_FileList)
+        % read MVC folder list
+        MVC_ds = tabularTextDatastore(strcat(MVC_file_path, '\', '*.csv'));
         for jjjj = 1:length(MVC_ds.Files)
         % read MVC files
-            MVC_ds = tabularTextDatastore(strcat(MVC_file_path, '\', '*.csv'));
+            
             MVC_Data = readtable(string(MVC_ds.Files(jjjj)));
             zz = MVC_ds.Files(jjjj);
             tzz = AfterFilting_FolderList(j).name;
@@ -67,28 +69,32 @@ for j = 1: length(AfterFilting_FolderList)
         AimingFrame = round(StagingFile.timing_H(jjj)*2000);
         RiseBowFrame = round(StagingFile.RaiseBow_H(jjj)*2000);
         % setting name to a matrix
-        name1 = {Processing_FileList.name};
+        name1 = {};
+        name2 = {};
         %% the Variables name need to change
-        name2 = 'R_Extensor';     
-        if StagingFile.R_Extensor(jjj) == 0
+        name3 = 'L_Triceps';     
+        if StagingFile.L_Triceps(jjj) == 0
             %% the Variables name need to change
-            Max_MVC = max(MVC_Data.R_Extensor);
+            Max_MVC = max(MVC_Data.L_Triceps);
             % setting muscle group
             %% the Variables name that need to change
-            iMVC_Data_1 = Processing_Data.REXTENSORCARPIULNARIS_EMG3./Max_MVC;
+            iMVC_Data_1 = Processing_Data.LTRICEPSBRACHII_EMG7./Max_MVC;
             % write iMVC matrix
             iMVC_Data(jj, :) =  {name1; iMVC_Data_1};
             % make aiming time has value and value larger than 2.5
-            if isnan(StagingFile.timing_H(jjj)) ~= 1 & StagingFile.timing_H(jjj) > 2.5 
+            if isnan(StagingFile.timing_H(jjj)) ~= 1 & StagingFile.timing_H(jjj) > 2.5 ...
+                    & StagingFile.L_Triceps ~= 1
                 iMVC_Data_ed_1 = iMVC_Data_1(AimingFrame-5000:AimingFrame+1000, 1);
                 iMVC_Data_ed(:, jj) = iMVC_Data_ed_1;
+                name1(:, jj) = Processing_FileList(jj).name;
             end
             % make sure aim time larger than 2.5 and Rise Bow time not
             % equal NaN
             if isnan(StagingFile.timing_H(jjj)) ~= 1 & StagingFile.timing_H(jjj) > 2.5 ...
-                    & isnan(StagingFile.RaiseBow_H(jjj)) ~= 1
+                    & isnan(StagingFile.RaiseBow_H(jjj)) ~= 1 & StagingFile.L_Triceps == 0
                 iMVC_Data_eded_1 = iMVC_Data_1(RiseBowFrame:AimingFrame+1000, 1);
                 iMVC_Data_eded(1:length(iMVC_Data_eded_1), jj) = iMVC_Data_eded_1;
+                name2(:, jj) = {Processing_FileList(jj).name};
             end
         end
 
@@ -105,13 +111,13 @@ for j = 1: length(AfterFilting_FolderList)
     File_name = erase(Processing_FileList(jj).name, 'csv');
     % write iMVC data on aiming time
     writetable(iMVC_Data_ed, strcat(iMVC_folder, '\', AfterFilting_FolderList(j).name,...
-                '\', name2, '_timing_', File_name, 'xlsx'), 'WriteVariableNames', false, 'Range','A2');
+                '\', name3, '_timing_', File_name, 'xlsx'), 'WriteVariableNames', false, 'Range','A2');
     writecell(name1, strcat(iMVC_folder, '\', AfterFilting_FolderList(j).name,...
-                '\', name2, '_timing_', File_name, 'xlsx'), 'Range','A1')
+                '\', name3, '_timing_', File_name, 'xlsx'), 'Range','A1')
             
     % write iMVC data on Rise Bow time
     writetable(iMVC_Data_eded, strcat(iMVC_folder, '\', AfterFilting_FolderList(j).name,...
-                '\', name2, '_RiseBow_', File_name, 'xlsx'), 'WriteVariableNames', false, 'Range','A2')
+                '\', name3, '_RiseBow_', File_name, 'xlsx'), 'WriteVariableNames', false, 'Range','A2')
     writecell(name1, strcat(iMVC_folder, '\', AfterFilting_FolderList(j).name,...
-                '\', name2, '_RiseBow_', File_name, 'xlsx'), 'Range','A1')
+                '\', name3, '_RiseBow_', File_name, 'xlsx'), 'Range','A1')
 end
