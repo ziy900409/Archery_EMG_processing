@@ -28,12 +28,13 @@ for j = 1: length(AfterFilting_FolderList)
     iMVC_Data_ed = [];
     iMVC_Data_eded = zeros(18000, length(Processing_FileList));
     %%
+    name1 = {};
+    name2 = {};
     for jj = 1:length(Processing_FileList)
         % read MVC folder list
         MVC_ds = tabularTextDatastore(strcat(MVC_file_path, '\', '*.csv'));
         for jjjj = 1:length(MVC_ds.Files)
         % read MVC files
-            
             MVC_Data = readtable(string(MVC_ds.Files(jjjj)));
             zz = MVC_ds.Files(jjjj);
             tzz = AfterFilting_FolderList(j).name;
@@ -69,36 +70,33 @@ for j = 1: length(AfterFilting_FolderList)
         AimingFrame = round(StagingFile.timing_H(jjj)*2000);
         RiseBowFrame = round(StagingFile.RaiseBow_H(jjj)*2000);
         % setting name to a matrix
-        name1 = {};
-        name2 = {};
+        
         %% the Variables name need to change
         name3 = 'L_Triceps';     
-        if StagingFile.L_Triceps(jjj) == 0
+        if StagingFile.L_Triceps_H(jjj) == 0
             %% the Variables name need to change
             Max_MVC = max(MVC_Data.L_Triceps);
             % setting muscle group
             %% the Variables name that need to change
             iMVC_Data_1 = Processing_Data.LTRICEPSBRACHII_EMG7./Max_MVC;
             % write iMVC matrix
-            iMVC_Data(jj, :) =  {name1; iMVC_Data_1};
+%             iMVC_Data(jj, :) =  {name1; iMVC_Data_1};
             % make aiming time has value and value larger than 2.5
-            if isnan(StagingFile.timing_H(jjj)) ~= 1 & StagingFile.timing_H(jjj) > 2.5 ...
-                    & StagingFile.L_Triceps ~= 1
+            if isnan(StagingFile.timing_H(jjj)) ~= 1 && StagingFile.timing_H(jjj) > 2.5 ...
+                    && or(StagingFile.L_Triceps_H(jjj) == 0, StagingFile.L_Triceps_H(jjj) == 2)
                 iMVC_Data_ed_1 = iMVC_Data_1(AimingFrame-5000:AimingFrame+1000, 1);
                 iMVC_Data_ed(:, jj) = iMVC_Data_ed_1;
-                name1(:, jj) = Processing_FileList(jj).name;
+                name1(:, jj) = {Processing_FileList(jj).name};
             end
             % make sure aim time larger than 2.5 and Rise Bow time not
             % equal NaN
-            if isnan(StagingFile.timing_H(jjj)) ~= 1 & StagingFile.timing_H(jjj) > 2.5 ...
-                    & isnan(StagingFile.RaiseBow_H(jjj)) ~= 1 & StagingFile.L_Triceps == 0
+            if isnan(StagingFile.timing_H(jjj)) ~= 1 && StagingFile.timing_H(jjj) > 2.5 ...
+                    && isnan(StagingFile.RaiseBow_H(jjj)) ~= 1 && StagingFile.L_Triceps_H(jjj) == 0
                 iMVC_Data_eded_1 = iMVC_Data_1(RiseBowFrame:AimingFrame+1000, 1);
                 iMVC_Data_eded(1:length(iMVC_Data_eded_1), jj) = iMVC_Data_eded_1;
                 name2(:, jj) = {Processing_FileList(jj).name};
             end
         end
-
-%         end
     end
     %% Right Trapezius
     % write iMVS data
